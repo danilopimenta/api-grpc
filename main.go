@@ -1,22 +1,15 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"flag"
-	"github.com/danilopimenta/micro-api-rpc/service"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/go-kit/kit/endpoint"
-	"github.com/gorilla/mux"
+	"github.com/danilopimenta/micro-api-rpc/hi"
 	"github.com/go-kit/kit/log"
-
-	kithttp "github.com/go-kit/kit/transport/http"
 )
 
 const (
@@ -39,14 +32,14 @@ func main() {
 
 	httpLogger := log.With(logger, "component", "http")
 
-	mux := http.NewServeMux()
-	var hs service.HiService
+	serverMux := http.NewServeMux()
+	var hs hi.HiService
 
-	hs = service.NewService()
+	hs = hi.NewService()
 
-	mux.Handle("/hi", microFramework(hs, httpLogger))
+	serverMux.Handle("/hi", hi.Handler(hs, httpLogger))
 
-	http.Handle("/", accessControl(mux))
+	http.Handle("/", accessControl(serverMux))
 
 	errs := make(chan error, 2)
 	go func() {
@@ -82,75 +75,4 @@ func envString(env, fallback string) string {
 		return fallback
 	}
 	return e
-}
-
-func microFramework(hs service.HiService, logger log.Logger) http.Handler {
-
-	opts := []kithttp.ServerOption{
-		kithttp.ServerErrorLogger(logger),
-		kithttp.ServerErrorEncoder(encodeError),
-	}
-
-	hiHandler := kithttp.NewServer(
-		makeHiEndpoint(hs),
-		decodeSayHiRequest,
-		encodeResponse,
-		opts...,
-	)
-
-	r := mux.NewRouter()
-
-	r.Handle("/hi", hiHandler).Methods("GET")
-
-	return r
-}
-
-type sayHiRequest struct {
-}
-
-type hiResponse struct {
-	Say string `json:"say"`
-	Err error  `json:"error,omitempty"`
-}
-
-func makeHiEndpoint(s service.HiService) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		_ = request.(sayHiRequest)
-
-		return hiResponse{Say: s.Hi(), Err: nil}, nil
-	}
-}
-
-func decodeSayHiRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	return sayHiRequest{}, nil
-}
-
-type errorer interface {
-	error() error
-}
-
-func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
-	if e, ok := response.(errorer); ok && e.error() != nil {
-		encodeError(ctx, e.error(), w)
-		return nil
-	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	return json.NewEncoder(w).Encode(response)
-}
-
-// ErrInvalidArgument is returned when one or more arguments are invalid.
-var ErrInvalidArgument = errors.New("invalid argument")
-
-// encode errors from business-logic
-func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	switch err {
-	case ErrInvalidArgument:
-		w.WriteHeader(http.StatusBadRequest)
-	default:
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"error": err.Error(),
-	})
 }

@@ -1,4 +1,4 @@
-package service
+package hi
 
 type HiService interface {
 	Hi() (string)
