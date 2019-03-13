@@ -1,4 +1,4 @@
-package hi
+package transport
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/danilopimenta/micro-api-rpc/hi"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
@@ -28,7 +29,7 @@ type errorer interface {
 // ErrInvalidArgument is returned when one or more arguments are invalid.
 var ErrInvalidArgument = errors.New("invalid argument")
 
-func Handler(hs HiService, logger log.Logger) http.Handler {
+func HTTPHandler(hs hi.HiService, logger log.Logger) http.Handler {
 
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorLogger(logger),
@@ -49,7 +50,7 @@ func Handler(hs HiService, logger log.Logger) http.Handler {
 	return r
 }
 
-func makeHiEndpoint(s HiService) endpoint.Endpoint {
+func makeHiEndpoint(s hi.HiService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		_ = request.(sayHiRequest)
 

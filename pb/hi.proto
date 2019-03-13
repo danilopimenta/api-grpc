@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package pb;
+
+service Hi {
+    rpc Saying (SayingRequest) returns (SayingResponse) {}
+}
+
+message SayingRequest {
+    string say = 1;
+}
+
+message SayingResponse {
+    string say = 1;
+}

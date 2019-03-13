@@ -3,13 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/danilopimenta/micro-api-rpc/pb"
+	"google.golang.org/grpc"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/danilopimenta/micro-api-rpc/hi"
+	"github.com/danilopimenta/micro-api-rpc/hi/transport"
 	"github.com/go-kit/kit/log"
+	kitgrpc "github.com/go-kit/kit/transport/grpc"
 )
 
 const (
@@ -19,15 +24,15 @@ const (
 func main() {
 
 	var (
-		addr = envString("PORT", defaultPort)
-
+		addr     = envString("PORT", defaultPort)
+		grpcAddr = flag.String("grpc-addr", ":8082", "gRPC listen address")
 		httpAddr = flag.String("http.addr", ":"+addr, "HTTP listen address")
 	)
 
 	flag.Parse()
 
 	var logger log.Logger
-	logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+	logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 
 	httpLogger := log.With(logger, "component", "http")
@@ -37,7 +42,23 @@ func main() {
 
 	hs = hi.NewService()
 
-	serverMux.Handle("/hi", hi.Handler(hs, httpLogger))
+	grpcServer := transport.GRPCHandler(hs, logger)
+
+	grpcListener, err := net.Listen("tcp", *grpcAddr)
+	if err != nil {
+		logger.Log("transport", "gRPC", "addr", *grpcAddr)
+	}
+
+	logger.Log("transport", "gRPC", "addr", *grpcAddr)
+
+	baseServer := grpc.NewServer(grpc.UnaryInterceptor(kitgrpc.Interceptor))
+	pb.RegisterHiServer(baseServer, grpcServer)
+	err = baseServer.Serve(grpcListener)
+	if err != nil {
+		logger.Log("transport", "gRPC", "addr", *grpcAddr)
+	}
+
+	serverMux.Handle("/hi", transport.HTTPHandler(hs, httpLogger))
 
 	http.Handle("/", accessControl(serverMux))
 
