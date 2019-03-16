@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/api-grpc.iml" filepath="$PROJECT_DIR$/.idea/api-grpc.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/micro-api-rpc.iml" filepath="$PROJECT_DIR$/.idea/micro-api-rpc.iml" />
     </modules>
   </component>

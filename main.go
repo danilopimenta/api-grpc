@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/danilopimenta/micro-api-rpc/pb"
+	"github.com/danilopimenta/api-grpc/pb"
 	"google.golang.org/grpc"
 	"net"
 	"net/http"
@@ -11,8 +11,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/danilopimenta/micro-api-rpc/hi"
-	"github.com/danilopimenta/micro-api-rpc/hi/transport"
+	"github.com/danilopimenta/api-grpc/hi"
+	"github.com/danilopimenta/api-grpc/hi/transport"
 	"github.com/go-kit/kit/log"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 )

@@ -3,8 +3,8 @@ package transport
 import (
 	"context"
 
-	"github.com/danilopimenta/micro-api-rpc/hi"
-	"github.com/danilopimenta/micro-api-rpc/pb"
+	"github.com/danilopimenta/api-grpc/hi"
+	"github.com/danilopimenta/api-grpc/pb"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
